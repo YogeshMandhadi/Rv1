@@ -1,0 +1,31 @@
+[data-theme="dark"] {
+    --primary-color: #5a9ee2;
+    --secondary-color: #34495e;
+    --background-color: #1a1a1a;
+    --text-color: #f5f5f5;
+    --card-background: #2d2d2d;
+    --border-color: #404040;
+    --shadow-color: rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .tool-card {
+    background-color: var(--card-background);
+    color: var(--text-color);
+}
+
+[data-theme="dark"] .tool-card h3 {
+    color: var(--text-color);
+}
+
+[data-theme="dark"] .ad-space {
+    background-color: var(--card-background);
+    border-color: var(--border-color);
+}
+
+[data-theme="dark"] .ad-placeholder {
+    color: #777;
+}
+
+[data-theme="dark"] .theme-toggle i {
+    color: #ffd700;
+} 

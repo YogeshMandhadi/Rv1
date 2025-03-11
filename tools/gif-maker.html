@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GIF Maker - Multi-Tools</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/dark-mode.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js"></script>
+    <style>
+        .tool-container {
+            max-width: 1000px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background-color: var(--card-background);
+            border-radius: 8px;
+            box-shadow: 0 2px 4px var(--shadow-color);
+        }
+
+        .drop-zone {
+            width: 100%;
+            min-height: 200px;
+            border: 2px dashed var(--border-color);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            transition: border-color 0.3s ease;
+            position: relative;
+        }
+
+        .drop-zone.dragover {
+            border-color: var(--primary-color);
+            background-color: var(--background-color);
+        }
+
+        .drop-zone p {
+            margin: 0.5rem 0;
+            color: var(--text-color);
+        }
+
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+
+        .image-container {
+            position: relative;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .image-container canvas {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .image-container .remove-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: rgba(255, 0, 0, 0.7);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+
+        .image-container .move-btn {
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 2px 6px;
+            cursor: move;
+            font-size: 12px;
+        }
+
+        .controls-container {
+            background-color: var(--background-color);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+
+        .control-group {
+            margin-bottom: 1rem;
+        }
+
+        .control-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-color);
+        }
+
+        .control-group input {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background-color: var(--background-color);
+            color: var(--text-color);
+        }
+
+        .button-container {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .button {
+            padding: 0.5rem 1rem;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .button:hover {
+            background-color: #357abd;
+        }
+
+        .button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        .button.secondary {
+            background-color: var(--card-background);
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+        }
+
+        .button.secondary:hover {
+            background-color: var(--border-color);
+        }
+
+        .info-message {
+            background-color: var(--background-color);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 1rem;
+            margin: 1rem 0;
+            color: var(--text-color);
+        }
+
+        .info-message i {
+            color: var(--primary-color);
+            margin-right: 0.5rem;
+        }
+
+        .progress-container {
+            margin-top: 1rem;
+            display: none;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background-color: var(--background-color);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background-color: var(--primary-color);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .progress-text {
+            margin-top: 0.5rem;
+            text-align: center;
+            color: var(--text-color);
+        }
+
+        .preview-container {
+            margin-top: 2rem;
+            text-align: center;
+            display: none;
+        }
+
+        .preview-container img {
+            max-width: 100%;
+            height: auto;
+            margin-bottom: 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+        }
+
+        .file-info {
+            background-color: var(--background-color);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 1rem;
+            margin-top: 1rem;
+            text-align: left;
+        }
+
+        .file-info p {
+            margin: 0.5rem 0;
+            color: var(--text-color);
+        }
+
+        #fileInput {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="main-nav">
+            <div class="logo">
+                <h1>GIF Maker</h1>
+            </div>
+            <div class="theme-toggle">
+                <button id="themeToggle">
+                    <i class="fas fa-moon"></i>
+                </button>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <div class="ad-space top-ad">
+            <!-- Ad Space (Top) -->
+            <div class="ad-placeholder">Advertisement Space</div>
+        </div>
+
+        <div class="tool-container">
+            <div class="info-message">
+                <i class="fas fa-info-circle"></i>
+                Create animated GIFs from multiple images. Drag and drop your images, adjust animation settings, and preview before downloading.
+            </div>
+
+            <div class="drop-zone" id="dropZone">
+                <i class="fas fa-cloud-upload-alt fa-3x" style="color: var(--primary-color);"></i>
+                <p>Drag and drop images here</p>
+                <p>or</p>
+                <input type="file" id="fileInput" multiple accept="image/*">
+                <button class="button" onclick="document.getElementById('fileInput').click()">Choose Files</button>
+            </div>
+
+            <div class="image-grid" id="imageGrid"></div>
+
+            <div class="controls-container">
+                <div class="control-group">
+                    <label for="frameDelay">Frame Delay (ms):</label>
+                    <input type="number" id="frameDelay" min="50" max="1000" value="200" step="50">
+                </div>
+
+                <div class="control-group">
+                    <label for="quality">Quality (1-30):</label>
+                    <input type="number" id="quality" min="1" max="30" value="10">
+                </div>
+
+                <div class="control-group">
+                    <label for="maxWidth">Maximum Width (px):</label>
+                    <input type="number" id="maxWidth" min="50" max="1000" value="800">
+                </div>
+            </div>
+
+            <div class="button-container">
+                <button class="button" id="createGifButton" disabled>Create GIF</button>
+                <button class="button" id="previewButton" disabled>Preview Animation</button>
+                <button class="button" id="downloadButton" disabled>Download GIF</button>
+                <button class="button secondary" id="clearButton">Clear All</button>
+            </div>
+
+            <div class="progress-container" id="progressContainer">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <div class="progress-text" id="progressText">Creating GIF: 0%</div>
+            </div>
+
+            <div class="preview-container" id="previewContainer">
+                <img id="previewImage" alt="GIF Preview">
+            </div>
+        </div>
+
+        <div class="ad-space bottom-ad">
+            <!-- Ad Space (Bottom) -->
+            <div class="ad-placeholder">Advertisement Space</div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="footer-content">
+            <p>&copy; 2024 Multi-Tools. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="../js/theme.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const dropZone = document.getElementById('dropZone');
+            const fileInput = document.getElementById('fileInput');
+            const imageGrid = document.getElementById('imageGrid');
+            const frameDelay = document.getElementById('frameDelay');
+            const quality = document.getElementById('quality');
+            const maxWidth = document.getElementById('maxWidth');
+            const createGifButton = document.getElementById('createGifButton');
+            const previewButton = document.getElementById('previewButton');
+            const downloadButton = document.getElementById('downloadButton');
+            const clearButton = document.getElementById('clearButton');
+            const progressContainer = document.getElementById('progressContainer');
+            const progressFill = document.getElementById('progressFill');
+            const progressText = document.getElementById('progressText');
+            const previewContainer = document.getElementById('previewContainer');
+            const previewImage = document.getElementById('previewImage');
+
+            let images = [];
+            let previewInterval = null;
+            let gifBlob = null;
+
+            // Function to resize image
+            function resizeImage(img, maxWidth) {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                let width = img.width;
+                let height = img.height;
+
+                if (width > maxWidth) {
+                    height = (maxWidth / width) * height;
+                    width = maxWidth;
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+                ctx.drawImage(img, 0, 0, width, height);
+                return canvas;
+            }
+
+            // Function to add image
+            function addImage(file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        images.push(img);
+                        updateImageGrid();
+                        createGifButton.disabled = false;
+                        previewButton.disabled = false;
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+
+            // Function to update image grid
+            function updateImageGrid() {
+                imageGrid.innerHTML = '';
+                images.forEach((img, index) => {
+                    const container = document.createElement('div');
+                    container.className = 'image-container';
+                    
+                    const canvas = resizeImage(img, 200); // Thumbnail size
+                    container.appendChild(canvas);
+
+                    const removeBtn = document.createElement('button');
+                    removeBtn.className = 'remove-btn';
+                    removeBtn.innerHTML = '×';
+                    removeBtn.onclick = () => {
+                        images.splice(index, 1);
+                        updateImageGrid();
+                        createGifButton.disabled = images.length === 0;
+                        previewButton.disabled = images.length === 0;
+                    };
+
+                    const moveBtn = document.createElement('button');
+                    moveBtn.className = 'move-btn';
+                    moveBtn.innerHTML = `#${index + 1}`;
+                    moveBtn.draggable = true;
+                    moveBtn.ondragstart = (e) => {
+                        e.dataTransfer.setData('text/plain', index);
+                    };
+
+                    container.appendChild(removeBtn);
+                    container.appendChild(moveBtn);
+                    
+                    container.ondragover = (e) => e.preventDefault();
+                    container.ondrop = (e) => {
+                        e.preventDefault();
+                        const fromIndex = parseInt(e.dataTransfer.getData('text/plain'));
+                        const toIndex = index;
+                        [images[fromIndex], images[toIndex]] = [images[toIndex], images[fromIndex]];
+                        updateImageGrid();
+                    };
+
+                    imageGrid.appendChild(container);
+                });
+            }
+
+            // File input and drop zone handlers
+            fileInput.addEventListener('change', (e) => {
+                Array.from(e.target.files).forEach(file => {
+                    if (file.type.startsWith('image/')) {
+                        addImage(file);
+                    }
+                });
+                fileInput.value = '';
+            });
+
+            dropZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropZone.classList.add('dragover');
+            });
+
+            dropZone.addEventListener('dragleave', () => {
+                dropZone.classList.remove('dragover');
+            });
+
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('dragover');
+                Array.from(e.dataTransfer.files).forEach(file => {
+                    if (file.type.startsWith('image/')) {
+                        addImage(file);
+                    }
+                });
+            });
+
+            // Create GIF functionality
+            createGifButton.addEventListener('click', async () => {
+                if (images.length === 0) return;
+
+                progressContainer.style.display = 'block';
+                progressFill.style.width = '0%';
+                progressText.textContent = 'Preparing frames: 0%';
+                createGifButton.disabled = true;
+                previewButton.disabled = true;
+
+                try {
+                    // Step 1: Prepare frames with optimized sizes
+                    const frames = [];
+                    const targetWidth = Math.min(parseInt(maxWidth.value), 800); // Limit maximum width
+                    const targetQuality = Math.min(parseInt(quality.value), 10); // Limit quality for better performance
+
+                    for (let i = 0; i < images.length; i++) {
+                        // Create optimized canvas
+                        const canvas = document.createElement('canvas');
+                        const ctx = canvas.getContext('2d');
+                        
+                        // Calculate new dimensions
+                        let width = images[i].width;
+                        let height = images[i].height;
+                        
+                        if (width > targetWidth) {
+                            height = (targetWidth / width) * height;
+                            width = targetWidth;
+                        }
+                        
+                        // Set canvas size
+                        canvas.width = width;
+                        canvas.height = height;
+                        
+                        // Draw image with smoothing
+                        ctx.imageSmoothingEnabled = true;
+                        ctx.imageSmoothingQuality = 'high';
+                        ctx.drawImage(images[i], 0, 0, width, height);
+                        
+                        frames.push(canvas);
+                        
+                        const prepProgress = ((i + 1) / images.length) * 20;
+                        progressFill.style.width = `${prepProgress}%`;
+                        progressText.textContent = `Optimizing frames: ${Math.round(prepProgress)}%`;
+                        
+                        // Allow UI to update and garbage collection
+                        await new Promise(resolve => setTimeout(resolve, 50));
+                    }
+
+                    // Step 2: Create GIF with optimized settings
+                    const gif = new GIF({
+                        workers: 2, // Reduce worker count for better stability
+                        quality: targetQuality,
+                        width: targetWidth,
+                        workerScript: 'https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.worker.js',
+                        dither: false, // Disable dithering for better performance
+                        debug: true // Enable debug mode for better error reporting
+                    });
+
+                    // Step 3: Add frames to GIF with optimized processing
+                    const delay = parseInt(frameDelay.value);
+                    for (let i = 0; i < frames.length; i++) {
+                        gif.addFrame(frames[i], {
+                            delay: delay,
+                            copy: true,
+                            dispose: 2 // Use 'restore to background' disposal method
+                        });
+                        
+                        const addProgress = 20 + ((i + 1) / frames.length) * 60;
+                        progressFill.style.width = `${addProgress}%`;
+                        progressText.textContent = `Processing frame ${i + 1} of ${frames.length}: ${Math.round(addProgress)}%`;
+                        
+                        // Allow UI to update and garbage collection
+                        await new Promise(resolve => setTimeout(resolve, 50));
+                        
+                        // Clear canvas from memory after adding to GIF
+                        frames[i].width = 0;
+                        frames[i].height = 0;
+                    }
+
+                    // Step 4: Render GIF with progress tracking
+                    gif.on('progress', (p) => {
+                        const renderProgress = 80 + (p * 20);
+                        progressFill.style.width = `${renderProgress}%`;
+                        progressText.textContent = `Rendering GIF: ${Math.round(renderProgress)}%`;
+                    });
+
+                    gif.on('finished', (blob) => {
+                        gifBlob = blob;
+                        const url = URL.createObjectURL(blob);
+                        previewImage.src = url;
+                        previewContainer.style.display = 'block';
+                        
+                        // Clear previous file info
+                        const existingFileInfo = previewContainer.querySelector('.file-info');
+                        if (existingFileInfo) {
+                            existingFileInfo.remove();
+                        }
+
+                        // Display file information
+                        const fileInfo = document.createElement('div');
+                        fileInfo.className = 'file-info';
+                        fileInfo.innerHTML = `
+                            <p>GIF Created Successfully!</p>
+                            <p>Size: ${(blob.size / 1024).toFixed(2)} KB</p>
+                            <p>Frames: ${images.length}</p>
+                            <p>Delay: ${delay}ms</p>
+                            <p>Quality: ${targetQuality}</p>
+                            <p>Width: ${targetWidth}px</p>
+                        `;
+                        previewContainer.appendChild(fileInfo);
+
+                        // Enable buttons
+                        downloadButton.disabled = false;
+                        createGifButton.disabled = false;
+                        previewButton.disabled = false;
+                        progressContainer.style.display = 'none';
+                        progressFill.style.width = '100%';
+                        progressText.textContent = 'GIF created successfully!';
+                        
+                        // Clean up memory
+                        frames.length = 0;
+                    });
+
+                    // Handle errors during rendering
+                    gif.on('error', (error) => {
+                        throw new Error(`GIF rendering error: ${error}`);
+                    });
+
+                    // Start rendering with timeout
+                    progressText.textContent = 'Starting GIF rendering...';
+                    setTimeout(() => gif.render(), 100);
+
+                } catch (error) {
+                    console.error('Error creating GIF:', error);
+                    progressContainer.style.display = 'none';
+                    createGifButton.disabled = false;
+                    previewButton.disabled = false;
+                    alert('Error creating GIF. Try these solutions:\n1. Reduce image dimensions (try 300-500px width)\n2. Lower quality setting (try 5-10)\n3. Use fewer frames\n4. Use smaller source images');
+                }
+            });
+
+            // Preview animation
+            previewButton.addEventListener('click', () => {
+                if (images.length === 0) return;
+                
+                if (previewInterval) {
+                    clearInterval(previewInterval);
+                    previewInterval = null;
+                    previewButton.textContent = 'Preview Animation';
+                    if (gifBlob) {
+                        previewImage.src = URL.createObjectURL(gifBlob);
+                    }
+                    return;
+                }
+
+                let currentFrame = 0;
+                const delay = parseInt(frameDelay.value);
+                const maxW = parseInt(maxWidth.value);
+                
+                previewButton.textContent = 'Stop Preview';
+                previewContainer.style.display = 'block';
+                
+                const showFrame = () => {
+                    if (!previewInterval) return; // Stop if preview was cancelled
+                    const canvas = resizeImage(images[currentFrame], maxW);
+                    previewImage.src = canvas.toDataURL();
+                    currentFrame = (currentFrame + 1) % images.length;
+                };
+
+                showFrame(); // Show first frame immediately
+                previewInterval = setInterval(showFrame, delay);
+            });
+
+            // Download handler
+            downloadButton.addEventListener('click', () => {
+                if (!gifBlob) return;
+                const url = URL.createObjectURL(gifBlob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'animation.gif';
+                a.click();
+                URL.revokeObjectURL(url);
+            });
+
+            // Clear handler
+            clearButton.addEventListener('click', () => {
+                images = [];
+                updateImageGrid();
+                previewContainer.style.display = 'none';
+                previewImage.src = '';
+                if (previewInterval) {
+                    clearInterval(previewInterval);
+                    previewInterval = null;
+                    previewButton.textContent = 'Preview Animation';
+                }
+                createGifButton.disabled = true;
+                previewButton.disabled = true;
+                downloadButton.disabled = true;
+                progressContainer.style.display = 'none';
+                gifBlob = null;
+            });
+
+            // Initial state
+            createGifButton.disabled = true;
+            previewButton.disabled = true;
+            downloadButton.disabled = true;
+        });
+    </script>
+</body>
+</html> 

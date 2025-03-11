@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Code Generator - Multi-Tools</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/dark-mode.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js"></script>
+    <style>
+        .tool-container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background-color: var(--card-background);
+            border-radius: 8px;
+            box-shadow: 0 2px 4px var(--shadow-color);
+        }
+
+        .input-container {
+            margin-bottom: 2rem;
+        }
+
+        .input-container textarea {
+            width: 100%;
+            min-height: 100px;
+            padding: 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            resize: vertical;
+            font-family: inherit;
+            margin-top: 0.5rem;
+        }
+
+        .controls-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .control-group {
+            margin-bottom: 1rem;
+        }
+
+        .control-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-color);
+        }
+
+        .control-group select,
+        .control-group input {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background-color: var(--background-color);
+            color: var(--text-color);
+        }
+
+        .preview-container {
+            text-align: center;
+            margin-top: 2rem;
+            padding: 2rem;
+            background-color: var(--background-color);
+            border-radius: 8px;
+        }
+
+        .preview-container canvas {
+            max-width: 100%;
+            height: auto;
+            margin-bottom: 1rem;
+            background-color: white;
+            padding: 1rem;
+            border-radius: 4px;
+        }
+
+        .button-container {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .button {
+            padding: 0.5rem 1rem;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .button:hover {
+            background-color: #357abd;
+        }
+
+        .button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        .button.secondary {
+            background-color: var(--card-background);
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+        }
+
+        .button.secondary:hover {
+            background-color: var(--border-color);
+        }
+
+        .info-message {
+            background-color: var(--background-color);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 1rem;
+            margin: 1rem 0;
+            color: var(--text-color);
+        }
+
+        .info-message i {
+            color: var(--primary-color);
+            margin-right: 0.5rem;
+        }
+
+        .error-message {
+            color: #ff4444;
+            margin-top: 1rem;
+            display: none;
+            text-align: center;
+        }
+
+        .preset-buttons {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+        }
+
+        .preset-button {
+            padding: 0.5rem 1rem;
+            background-color: var(--background-color);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            color: var(--text-color);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .preset-button:hover {
+            background-color: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .color-picker {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .color-picker input[type="color"] {
+            width: 50px;
+            height: 30px;
+            padding: 0;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="main-nav">
+            <div class="logo">
+                <h1>QR Code Generator</h1>
+            </div>
+            <div class="theme-toggle">
+                <button id="themeToggle">
+                    <i class="fas fa-moon"></i>
+                </button>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <div class="ad-space top-ad">
+            <!-- Ad Space (Top) -->
+            <div class="ad-placeholder">Advertisement Space</div>
+        </div>
+
+        <div class="tool-container">
+            <div class="info-message">
+                <i class="fas fa-info-circle"></i>
+                Generate QR codes for text, URLs, contact information, or any other data. Customize size, error correction, and colors to create the perfect QR code for your needs.
+            </div>
+
+            <div class="preset-buttons">
+                <button class="preset-button" data-type="url">Website URL</button>
+                <button class="preset-button" data-type="email">Email</button>
+                <button class="preset-button" data-type="phone">Phone Number</button>
+                <button class="preset-button" data-type="wifi">WiFi Network</button>
+                <button class="preset-button" data-type="vcard">Contact Card</button>
+            </div>
+
+            <div class="input-container">
+                <label for="qrInput">Enter your text or data:</label>
+                <textarea id="qrInput" placeholder="Enter text, URL, or data to generate QR code"></textarea>
+            </div>
+
+            <div class="controls-container">
+                <div class="control-group">
+                    <label for="qrSize">QR Code Size:</label>
+                    <input type="number" id="qrSize" min="100" max="1000" value="300" step="50">
+                </div>
+
+                <div class="control-group">
+                    <label for="errorCorrection">Error Correction Level:</label>
+                    <select id="errorCorrection">
+                        <option value="L">Low (7%)</option>
+                        <option value="M" selected>Medium (15%)</option>
+                        <option value="Q">Quartile (25%)</option>
+                        <option value="H">High (30%)</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <label>QR Code Colors:</label>
+                    <div class="color-picker">
+                        <input type="color" id="foregroundColor" value="#000000">
+                        <span>Foreground</span>
+                    </div>
+                    <div class="color-picker">
+                        <input type="color" id="backgroundColor" value="#FFFFFF">
+                        <span>Background</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="preview-container">
+                <div id="qrCode"></div>
+                <div class="button-container">
+                    <button class="button" id="generateButton">Generate QR Code</button>
+                    <button class="button" id="downloadPNG">Download PNG</button>
+                    <button class="button" id="downloadSVG">Download SVG</button>
+                    <button class="button secondary" id="clearButton">Clear</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="ad-space bottom-ad">
+            <!-- Ad Space (Bottom) -->
+            <div class="ad-placeholder">Advertisement Space</div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="footer-content">
+            <p>&copy; 2024 Multi-Tools. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="../js/theme.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const qrInput = document.getElementById('qrInput');
+            const qrSize = document.getElementById('qrSize');
+            const errorCorrection = document.getElementById('errorCorrection');
+            const foregroundColor = document.getElementById('foregroundColor');
+            const backgroundColor = document.getElementById('backgroundColor');
+            const generateButton = document.getElementById('generateButton');
+            const downloadPNG = document.getElementById('downloadPNG');
+            const downloadSVG = document.getElementById('downloadSVG');
+            const clearButton = document.getElementById('clearButton');
+            const qrCodeDiv = document.getElementById('qrCode');
+            const presetButtons = document.querySelectorAll('.preset-button');
+
+            let qrcode = null;
+
+            // Preset templates
+            const presets = {
+                url: 'https://',
+                email: 'mailto:email@example.com',
+                phone: 'tel:+1234567890',
+                wifi: 'WIFI:T:WPA;S:NetworkName;P:Password;;',
+                vcard: 'BEGIN:VCARD\nVERSION:3.0\nN:Doe;John;;;\nFN:John Doe\nTEL:+1234567890\nEMAIL:john@example.com\nEND:VCARD'
+            };
+
+            presetButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const type = button.dataset.type;
+                    qrInput.value = presets[type];
+                    generateQRCode();
+                });
+            });
+
+            function generateQRCode() {
+                const text = qrInput.value.trim();
+                if (!text) return;
+
+                // Clear previous QR code
+                qrCodeDiv.innerHTML = '';
+
+                // Create new QR code
+                qrcode = new QRCode(qrCodeDiv, {
+                    text: text,
+                    width: parseInt(qrSize.value),
+                    height: parseInt(qrSize.value),
+                    colorDark: foregroundColor.value,
+                    colorLight: backgroundColor.value,
+                    correctLevel: QRCode[`CorrectLevel`][errorCorrection.value]
+                });
+
+                // Enable download buttons
+                downloadPNG.disabled = false;
+                downloadSVG.disabled = false;
+            }
+
+            generateButton.addEventListener('click', generateQRCode);
+
+            qrInput.addEventListener('input', () => {
+                generateButton.disabled = !qrInput.value.trim();
+            });
+
+            [qrSize, errorCorrection, foregroundColor, backgroundColor].forEach(control => {
+                control.addEventListener('change', generateQRCode);
+            });
+
+            downloadPNG.addEventListener('click', () => {
+                if (!qrcode) return;
+
+                const canvas = qrCodeDiv.querySelector('canvas');
+                if (!canvas) return;
+
+                const link = document.createElement('a');
+                link.download = 'qrcode.png';
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            });
+
+            downloadSVG.addEventListener('click', () => {
+                if (!qrcode) return;
+
+                const svg = qrCodeDiv.querySelector('svg');
+                if (!svg) {
+                    // If SVG is not available, create it from the canvas
+                    const canvas = qrCodeDiv.querySelector('canvas');
+                    if (!canvas) return;
+
+                    const svgString = `
+                        <svg xmlns="http://www.w3.org/2000/svg" width="${canvas.width}" height="${canvas.height}">
+                            <image width="${canvas.width}" height="${canvas.height}" 
+                                href="${canvas.toDataURL('image/png')}"/>
+                        </svg>
+                    `;
+
+                    const blob = new Blob([svgString], { type: 'image/svg+xml' });
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.download = 'qrcode.svg';
+                    link.href = url;
+                    link.click();
+                    URL.revokeObjectURL(url);
+                } else {
+                    const svgString = new XMLSerializer().serializeToString(svg);
+                    const blob = new Blob([svgString], { type: 'image/svg+xml' });
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.download = 'qrcode.svg';
+                    link.href = url;
+                    link.click();
+                    URL.revokeObjectURL(url);
+                }
+            });
+
+            clearButton.addEventListener('click', () => {
+                qrInput.value = '';
+                qrCodeDiv.innerHTML = '';
+                generateButton.disabled = true;
+                downloadPNG.disabled = true;
+                downloadSVG.disabled = true;
+            });
+
+            // Initial state
+            generateButton.disabled = true;
+            downloadPNG.disabled = true;
+            downloadSVG.disabled = true;
+        });
+    </script>
+</body>
+</html> 

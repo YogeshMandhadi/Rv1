@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Resizer - Multi-Tools</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/dark-mode.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .tool-container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background-color: var(--card-background);
+            border-radius: 8px;
+            box-shadow: 0 2px 4px var(--shadow-color);
+        }
+
+        .drop-zone {
+            width: 100%;
+            height: 200px;
+            border: 2px dashed var(--border-color);
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: border-color 0.3s ease;
+            margin-bottom: 1rem;
+        }
+
+        .drop-zone:hover {
+            border-color: var(--primary-color);
+        }
+
+        .drop-zone.dragover {
+            border-color: var(--primary-color);
+            background-color: rgba(74, 144, 226, 0.1);
+        }
+
+        .drop-zone i {
+            font-size: 3rem;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+
+        .preview-container {
+            margin-top: 2rem;
+            text-align: center;
+            display: none;
+        }
+
+        .preview-container img {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+        }
+
+        .resize-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            justify-content: center;
+            margin: 1rem 0;
+        }
+
+        .dimension-control {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .dimension-control input[type="number"] {
+            width: 100px;
+            padding: 0.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background-color: var(--background-color);
+            color: var(--text-color);
+        }
+
+        .lock-aspect {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin: 0 1rem;
+            color: var(--text-color);
+        }
+
+        .preset-sizes {
+            width: 100%;
+            margin-top: 1rem;
+            display: flex;
+            gap: 0.5rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .preset-button {
+            padding: 0.5rem 1rem;
+            background-color: var(--card-background);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            cursor: pointer;
+            color: var(--text-color);
+            transition: all 0.3s ease;
+        }
+
+        .preset-button:hover {
+            background-color: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .button-container {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 1rem;
+        }
+
+        .button {
+            padding: 0.5rem 1rem;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .button:hover {
+            background-color: #357abd;
+        }
+
+        .button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        .file-info {
+            margin-top: 1rem;
+            font-size: 0.9rem;
+            color: var(--text-color);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="main-nav">
+            <div class="logo">
+                <h1>Image Resizer</h1>
+            </div>
+            <div class="theme-toggle">
+                <button id="themeToggle">
+                    <i class="fas fa-moon"></i>
+                </button>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <div class="ad-space top-ad">
+            <!-- Ad Space (Top) -->
+            <div class="ad-placeholder">Advertisement Space</div>
+        </div>
+
+        <div class="tool-container">
+            <div class="drop-zone" id="dropZone">
+                <i class="fas fa-cloud-upload-alt"></i>
+                <p>Drag and drop your image here or click to browse</p>
+                <input type="file" id="fileInput" accept="image/*" style="display: none;">
+            </div>
+
+            <div class="preview-container" id="previewContainer">
+                <h3>Preview</h3>
+                <img id="imagePreview" src="" alt="Preview">
+                <div class="resize-controls">
+                    <div class="dimension-control">
+                        <label for="widthInput">Width:</label>
+                        <input type="number" id="widthInput" min="1" placeholder="Width">
+                        <span>px</span>
+                    </div>
+                    <div class="lock-aspect">
+                        <input type="checkbox" id="lockAspect" checked>
+                        <label for="lockAspect">Lock Aspect Ratio</label>
+                    </div>
+                    <div class="dimension-control">
+                        <label for="heightInput">Height:</label>
+                        <input type="number" id="heightInput" min="1" placeholder="Height">
+                        <span>px</span>
+                    </div>
+                </div>
+                <div class="preset-sizes">
+                    <button class="preset-button" data-width="1920" data-height="1080">1920×1080</button>
+                    <button class="preset-button" data-width="1280" data-height="720">1280×720</button>
+                    <button class="preset-button" data-width="800" data-height="600">800×600</button>
+                    <button class="preset-button" data-width="640" data-height="480">640×480</button>
+                </div>
+                <div class="file-info" id="fileInfo"></div>
+                <div class="button-container">
+                    <button class="button" id="resizeButton" disabled>Resize</button>
+                    <button class="button" id="downloadButton" disabled>Download</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="ad-space bottom-ad">
+            <!-- Ad Space (Bottom) -->
+            <div class="ad-placeholder">Advertisement Space</div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="footer-content">
+            <p>&copy; 2024 Multi-Tools. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="../js/theme.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const dropZone = document.getElementById('dropZone');
+            const fileInput = document.getElementById('fileInput');
+            const previewContainer = document.getElementById('previewContainer');
+            const imagePreview = document.getElementById('imagePreview');
+            const widthInput = document.getElementById('widthInput');
+            const heightInput = document.getElementById('heightInput');
+            const lockAspect = document.getElementById('lockAspect');
+            const resizeButton = document.getElementById('resizeButton');
+            const downloadButton = document.getElementById('downloadButton');
+            const fileInfo = document.getElementById('fileInfo');
+            let currentFile = null;
+            let originalAspectRatio = 1;
+
+            // Preset size buttons
+            document.querySelectorAll('.preset-button').forEach(button => {
+                button.addEventListener('click', () => {
+                    const width = parseInt(button.dataset.width);
+                    const height = parseInt(button.dataset.height);
+                    widthInput.value = width;
+                    heightInput.value = height;
+                    resizeButton.disabled = false;
+                });
+            });
+
+            // Dimension input handlers
+            widthInput.addEventListener('input', () => {
+                if (lockAspect.checked && widthInput.value) {
+                    heightInput.value = Math.round(widthInput.value / originalAspectRatio);
+                }
+                resizeButton.disabled = false;
+                downloadButton.disabled = true;
+            });
+
+            heightInput.addEventListener('input', () => {
+                if (lockAspect.checked && heightInput.value) {
+                    widthInput.value = Math.round(heightInput.value * originalAspectRatio);
+                }
+                resizeButton.disabled = false;
+                downloadButton.disabled = true;
+            });
+
+            // Drag and drop handlers
+            dropZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropZone.classList.add('dragover');
+            });
+
+            dropZone.addEventListener('dragleave', () => {
+                dropZone.classList.remove('dragover');
+            });
+
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('dragover');
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    handleFile(files[0]);
+                }
+            });
+
+            dropZone.addEventListener('click', () => {
+                fileInput.click();
+            });
+
+            fileInput.addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    handleFile(e.target.files[0]);
+                }
+            });
+
+            function handleFile(file) {
+                if (!file.type.startsWith('image/')) {
+                    alert('Please upload an image file.');
+                    return;
+                }
+
+                currentFile = file;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        originalAspectRatio = img.width / img.height;
+                        widthInput.value = img.width;
+                        heightInput.value = img.height;
+                        imagePreview.src = e.target.result;
+                        previewContainer.style.display = 'block';
+                        resizeButton.disabled = false;
+                        updateFileInfo(file);
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+
+            function updateFileInfo(file) {
+                const size = (file.size / 1024).toFixed(2);
+                fileInfo.textContent = `Original Size: ${size} KB`;
+            }
+
+            resizeButton.addEventListener('click', () => {
+                if (!currentFile) return;
+
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = parseInt(widthInput.value);
+                    canvas.height = parseInt(heightInput.value);
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    
+                    // Update preview with resized image
+                    const resizedDataUrl = canvas.toDataURL(currentFile.type);
+                    imagePreview.src = resizedDataUrl;
+                    downloadButton.disabled = false;
+
+                    // Update file size info
+                    const base64str = resizedDataUrl.split(',')[1];
+                    const decoded = atob(base64str);
+                    const newSize = (decoded.length / 1024).toFixed(2);
+                    fileInfo.textContent = `Original Size: ${(currentFile.size / 1024).toFixed(2)} KB | Resized Size: ${newSize} KB`;
+                };
+                img.src = URL.createObjectURL(currentFile);
+            });
+
+            downloadButton.addEventListener('click', () => {
+                const link = document.createElement('a');
+                const fileName = currentFile.name.replace(/\.[^/.]+$/, '') + '_resized' + '.' + currentFile.type.split('/')[1];
+                link.download = fileName;
+                link.href = imagePreview.src;
+                link.click();
+            });
+        });
+    </script>
+</body>
+</html> 

@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebP to PNG Converter - Multi-Tools</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/dark-mode.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .tool-container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background-color: var(--card-background);
+            border-radius: 8px;
+            box-shadow: 0 2px 4px var(--shadow-color);
+        }
+
+        .drop-zone {
+            width: 100%;
+            height: 200px;
+            border: 2px dashed var(--border-color);
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: border-color 0.3s ease;
+            margin-bottom: 1rem;
+        }
+
+        .drop-zone:hover {
+            border-color: var(--primary-color);
+        }
+
+        .drop-zone.dragover {
+            border-color: var(--primary-color);
+            background-color: rgba(74, 144, 226, 0.1);
+        }
+
+        .drop-zone i {
+            font-size: 3rem;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+
+        .preview-container {
+            margin-top: 2rem;
+            text-align: center;
+            display: none;
+        }
+
+        .preview-container img {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+        }
+
+        .button-container {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 1rem;
+        }
+
+        .button {
+            padding: 0.5rem 1rem;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .button:hover {
+            background-color: #357abd;
+        }
+
+        .button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        .button.secondary {
+            background-color: var(--card-background);
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+        }
+
+        .button.secondary:hover {
+            background-color: var(--border-color);
+        }
+
+        .file-info {
+            margin-top: 1rem;
+            font-size: 0.9rem;
+            color: var(--text-color);
+        }
+
+        .quality-control {
+            margin: 1rem 0;
+            text-align: center;
+        }
+
+        .quality-control label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-color);
+        }
+
+        .quality-control input[type="range"] {
+            width: 100%;
+            max-width: 300px;
+        }
+
+        .quality-value {
+            display: inline-block;
+            margin-top: 0.5rem;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .error-message {
+            color: #ff4444;
+            margin-top: 1rem;
+            display: none;
+            text-align: center;
+        }
+
+        .info-message {
+            background-color: var(--background-color);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 1rem;
+            margin: 1rem 0;
+            color: var(--text-color);
+        }
+
+        .info-message i {
+            color: var(--primary-color);
+            margin-right: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="main-nav">
+            <div class="logo">
+                <h1>WebP to PNG Converter</h1>
+            </div>
+            <div class="theme-toggle">
+                <button id="themeToggle">
+                    <i class="fas fa-moon"></i>
+                </button>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <div class="ad-space top-ad">
+            <!-- Ad Space (Top) -->
+            <div class="ad-placeholder">Advertisement Space</div>
+        </div>
+
+        <div class="tool-container">
+            <div class="info-message">
+                <i class="fas fa-info-circle"></i>
+                Convert your WebP images to PNG format while maintaining high quality. Perfect for using WebP images in applications or platforms that don't support the WebP format.
+            </div>
+
+            <div class="drop-zone" id="dropZone">
+                <i class="fas fa-cloud-upload-alt"></i>
+                <p>Drag and drop your WebP image here or click to browse</p>
+                <input type="file" id="fileInput" accept="image/webp" style="display: none;">
+            </div>
+
+            <div class="error-message" id="errorMessage">
+                Please upload a valid WebP image file.
+            </div>
+
+            <div class="preview-container" id="previewContainer">
+                <h3>Preview</h3>
+                <img id="imagePreview" src="" alt="Preview">
+                <div class="quality-control">
+                    <label for="qualitySlider">PNG Quality: <span id="qualityValue">100</span>%</label>
+                    <input type="range" id="qualitySlider" min="1" max="100" value="100">
+                </div>
+                <div class="file-info" id="fileInfo"></div>
+                <div class="button-container">
+                    <button class="button" id="convertButton">Convert to PNG</button>
+                    <button class="button" id="downloadButton" disabled>Download PNG</button>
+                    <button class="button secondary" id="newImageButton">Convert Another Image</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="ad-space bottom-ad">
+            <!-- Ad Space (Bottom) -->
+            <div class="ad-placeholder">Advertisement Space</div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="footer-content">
+            <p>&copy; 2024 Multi-Tools. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="../js/theme.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const dropZone = document.getElementById('dropZone');
+            const fileInput = document.getElementById('fileInput');
+            const previewContainer = document.getElementById('previewContainer');
+            const imagePreview = document.getElementById('imagePreview');
+            const convertButton = document.getElementById('convertButton');
+            const downloadButton = document.getElementById('downloadButton');
+            const newImageButton = document.getElementById('newImageButton');
+            const fileInfo = document.getElementById('fileInfo');
+            const errorMessage = document.getElementById('errorMessage');
+            const qualitySlider = document.getElementById('qualitySlider');
+            const qualityValue = document.getElementById('qualityValue');
+            let currentFile = null;
+            let convertedImage = null;
+
+            // Quality slider handler
+            qualitySlider.addEventListener('input', (e) => {
+                qualityValue.textContent = e.target.value;
+                if (currentFile) {
+                    downloadButton.disabled = true;
+                }
+            });
+
+            // Drag and drop handlers
+            dropZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropZone.classList.add('dragover');
+            });
+
+            dropZone.addEventListener('dragleave', () => {
+                dropZone.classList.remove('dragover');
+            });
+
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('dragover');
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    handleFile(files[0]);
+                }
+            });
+
+            dropZone.addEventListener('click', () => {
+                fileInput.click();
+            });
+
+            fileInput.addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    handleFile(e.target.files[0]);
+                }
+            });
+
+            function handleFile(file) {
+                errorMessage.style.display = 'none';
+                if (!file.type.startsWith('image/webp')) {
+                    errorMessage.style.display = 'block';
+                    return;
+                }
+
+                currentFile = file;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    imagePreview.src = e.target.result;
+                    dropZone.style.display = 'none';
+                    previewContainer.style.display = 'block';
+                    downloadButton.disabled = true;
+                    updateFileInfo(file);
+                };
+                reader.readAsDataURL(file);
+            }
+
+            function updateFileInfo(file) {
+                const size = (file.size / 1024).toFixed(2);
+                fileInfo.textContent = `Original Size: ${size} KB`;
+            }
+
+            convertButton.addEventListener('click', () => {
+                if (!currentFile) return;
+
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0);
+                    
+                    // Convert to PNG with quality setting
+                    const quality = parseInt(qualitySlider.value) / 100;
+                    const pngDataUrl = canvas.toDataURL('image/png', quality);
+                    imagePreview.src = pngDataUrl;
+                    convertedImage = pngDataUrl;
+                    downloadButton.disabled = false;
+
+                    // Update file size info
+                    const base64str = pngDataUrl.split(',')[1];
+                    const decoded = atob(base64str);
+                    const newSize = (decoded.length / 1024).toFixed(2);
+                    fileInfo.textContent = `Original Size: ${(currentFile.size / 1024).toFixed(2)} KB | Converted Size: ${newSize} KB`;
+                };
+                img.src = URL.createObjectURL(currentFile);
+            });
+
+            downloadButton.addEventListener('click', () => {
+                if (!convertedImage) return;
+
+                const link = document.createElement('a');
+                const fileName = currentFile.name.replace(/\.webp$/i, '') + '.png';
+                link.download = fileName;
+                link.href = convertedImage;
+                link.click();
+            });
+
+            newImageButton.addEventListener('click', () => {
+                dropZone.style.display = 'block';
+                previewContainer.style.display = 'none';
+                imagePreview.src = '';
+                currentFile = null;
+                convertedImage = null;
+                downloadButton.disabled = true;
+                errorMessage.style.display = 'none';
+                qualitySlider.value = 100;
+                qualityValue.textContent = '100';
+            });
+        });
+    </script>
+</body>
+</html> 

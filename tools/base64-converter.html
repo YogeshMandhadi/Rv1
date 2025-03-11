@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Base64 Converter - Multi-Tools</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/dark-mode.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .tool-container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background-color: var(--card-background);
+            border-radius: 8px;
+            box-shadow: 0 2px 4px var(--shadow-color);
+        }
+
+        .conversion-mode {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-bottom: 2rem;
+        }
+
+        .mode-button {
+            padding: 0.5rem 1rem;
+            background-color: var(--card-background);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            cursor: pointer;
+            color: var(--text-color);
+            transition: all 0.3s ease;
+        }
+
+        .mode-button.active {
+            background-color: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .drop-zone {
+            width: 100%;
+            height: 200px;
+            border: 2px dashed var(--border-color);
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: border-color 0.3s ease;
+            margin-bottom: 1rem;
+        }
+
+        .drop-zone:hover {
+            border-color: var(--primary-color);
+        }
+
+        .drop-zone.dragover {
+            border-color: var(--primary-color);
+            background-color: rgba(74, 144, 226, 0.1);
+        }
+
+        .drop-zone i {
+            font-size: 3rem;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+
+        .base64-input {
+            width: 100%;
+            height: 200px;
+            margin: 1rem 0;
+            padding: 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            font-family: monospace;
+            resize: vertical;
+        }
+
+        .preview-container {
+            margin-top: 2rem;
+            text-align: center;
+            display: none;
+        }
+
+        .preview-container img {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+        }
+
+        .button-container {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 1rem;
+        }
+
+        .button {
+            padding: 0.5rem 1rem;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .button:hover {
+            background-color: #357abd;
+        }
+
+        .button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        .button.secondary {
+            background-color: var(--card-background);
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+        }
+
+        .button.secondary:hover {
+            background-color: var(--border-color);
+        }
+
+        .file-info {
+            margin-top: 1rem;
+            font-size: 0.9rem;
+            color: var(--text-color);
+        }
+
+        #imageToBase64 {
+            display: block;
+        }
+
+        #base64ToImage {
+            display: none;
+        }
+
+        .error-message {
+            color: #ff4444;
+            margin-top: 1rem;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="main-nav">
+            <div class="logo">
+                <h1>Base64 Converter</h1>
+            </div>
+            <div class="theme-toggle">
+                <button id="themeToggle">
+                    <i class="fas fa-moon"></i>
+                </button>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <div class="ad-space top-ad">
+            <!-- Ad Space (Top) -->
+            <div class="ad-placeholder">Advertisement Space</div>
+        </div>
+
+        <div class="tool-container">
+            <div class="conversion-mode">
+                <button class="mode-button active" data-mode="imageToBase64">
+                    <i class="fas fa-file-image"></i> Image to Base64
+                </button>
+                <button class="mode-button" data-mode="base64ToImage">
+                    <i class="fas fa-code"></i> Base64 to Image
+                </button>
+            </div>
+
+            <div id="imageToBase64">
+                <div class="drop-zone" id="dropZone">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <p>Drag and drop your image here or click to browse</p>
+                    <input type="file" id="fileInput" accept="image/*" style="display: none;">
+                </div>
+                <div class="preview-container" id="previewContainer">
+                    <h3>Preview</h3>
+                    <img id="imagePreview" src="" alt="Preview">
+                    <div class="file-info" id="fileInfo"></div>
+                    <textarea class="base64-input" id="base64Output" readonly placeholder="Base64 output will appear here..."></textarea>
+                    <div class="button-container">
+                        <button class="button" id="copyButton">Copy Base64</button>
+                        <button class="button secondary" id="newImageButton">Convert Another Image</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="base64ToImage">
+                <textarea class="base64-input" id="base64Input" placeholder="Paste your Base64 string here..."></textarea>
+                <div class="error-message" id="errorMessage">Invalid Base64 string. Please check your input.</div>
+                <div class="button-container">
+                    <button class="button" id="convertButton">Convert to Image</button>
+                </div>
+                <div class="preview-container" id="base64PreviewContainer">
+                    <h3>Preview</h3>
+                    <img id="base64Preview" src="" alt="Preview">
+                    <div class="button-container">
+                        <button class="button" id="downloadButton">Download Image</button>
+                        <button class="button secondary" id="newBase64Button">Convert Another Base64</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="ad-space bottom-ad">
+            <!-- Ad Space (Bottom) -->
+            <div class="ad-placeholder">Advertisement Space</div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="footer-content">
+            <p>&copy; 2024 Multi-Tools. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="../js/theme.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const modeButtons = document.querySelectorAll('.mode-button');
+            const imageToBase64Section = document.getElementById('imageToBase64');
+            const base64ToImageSection = document.getElementById('base64ToImage');
+            const dropZone = document.getElementById('dropZone');
+            const fileInput = document.getElementById('fileInput');
+            const previewContainer = document.getElementById('previewContainer');
+            const imagePreview = document.getElementById('imagePreview');
+            const base64Output = document.getElementById('base64Output');
+            const copyButton = document.getElementById('copyButton');
+            const newImageButton = document.getElementById('newImageButton');
+            const fileInfo = document.getElementById('fileInfo');
+            
+            const base64Input = document.getElementById('base64Input');
+            const convertButton = document.getElementById('convertButton');
+            const base64PreviewContainer = document.getElementById('base64PreviewContainer');
+            const base64Preview = document.getElementById('base64Preview');
+            const downloadButton = document.getElementById('downloadButton');
+            const newBase64Button = document.getElementById('newBase64Button');
+            const errorMessage = document.getElementById('errorMessage');
+
+            let currentFile = null;
+
+            // Mode switching
+            modeButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    modeButtons.forEach(btn => btn.classList.remove('active'));
+                    button.classList.add('active');
+                    const mode = button.dataset.mode;
+                    
+                    if (mode === 'imageToBase64') {
+                        imageToBase64Section.style.display = 'block';
+                        base64ToImageSection.style.display = 'none';
+                    } else {
+                        imageToBase64Section.style.display = 'none';
+                        base64ToImageSection.style.display = 'block';
+                    }
+                });
+            });
+
+            // Image to Base64 handlers
+            dropZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropZone.classList.add('dragover');
+            });
+
+            dropZone.addEventListener('dragleave', () => {
+                dropZone.classList.remove('dragover');
+            });
+
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('dragover');
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    handleFile(files[0]);
+                }
+            });
+
+            dropZone.addEventListener('click', () => {
+                fileInput.click();
+            });
+
+            fileInput.addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    handleFile(e.target.files[0]);
+                }
+            });
+
+            function handleFile(file) {
+                if (!file.type.startsWith('image/')) {
+                    alert('Please upload an image file.');
+                    return;
+                }
+
+                currentFile = file;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    imagePreview.src = e.target.result;
+                    base64Output.value = e.target.result;
+                    dropZone.style.display = 'none';
+                    previewContainer.style.display = 'block';
+                    updateFileInfo(file);
+                };
+                reader.readAsDataURL(file);
+            }
+
+            function updateFileInfo(file) {
+                const size = (file.size / 1024).toFixed(2);
+                fileInfo.textContent = `File Name: ${file.name} | Size: ${size} KB | Type: ${file.type}`;
+            }
+
+            copyButton.addEventListener('click', () => {
+                base64Output.select();
+                document.execCommand('copy');
+                copyButton.textContent = 'Copied!';
+                setTimeout(() => {
+                    copyButton.textContent = 'Copy Base64';
+                }, 2000);
+            });
+
+            newImageButton.addEventListener('click', () => {
+                dropZone.style.display = 'block';
+                previewContainer.style.display = 'none';
+                imagePreview.src = '';
+                base64Output.value = '';
+                currentFile = null;
+            });
+
+            // Base64 to Image handlers
+            convertButton.addEventListener('click', () => {
+                const base64String = base64Input.value.trim();
+                errorMessage.style.display = 'none';
+
+                try {
+                    // Check if it's a valid base64 image string
+                    if (!base64String.startsWith('data:image')) {
+                        throw new Error('Invalid base64 string');
+                    }
+
+                    base64Preview.src = base64String;
+                    base64PreviewContainer.style.display = 'block';
+                } catch (error) {
+                    errorMessage.style.display = 'block';
+                }
+            });
+
+            downloadButton.addEventListener('click', () => {
+                const link = document.createElement('a');
+                const imageFormat = base64Preview.src.split(';')[0].split('/')[1];
+                link.download = `converted_image.${imageFormat}`;
+                link.href = base64Preview.src;
+                link.click();
+            });
+
+            newBase64Button.addEventListener('click', () => {
+                base64Input.value = '';
+                base64PreviewContainer.style.display = 'none';
+                base64Preview.src = '';
+                errorMessage.style.display = 'none';
+            });
+        });
+    </script>
+</body>
+</html> 

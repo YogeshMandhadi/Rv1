@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Screenshot to PDF Converter - Multi-Tools</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/dark-mode.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        .tool-container {
+            max-width: 1000px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background-color: var(--card-background);
+            border-radius: 8px;
+            box-shadow: 0 2px 4px var(--shadow-color);
+        }
+
+        .screenshot-area {
+            width: 100%;
+            min-height: 200px;
+            border: 2px dashed var(--border-color);
+            border-radius: 8px;
+            margin-bottom: 2rem;
+            padding: 1rem;
+            position: relative;
+        }
+
+        .screenshot-input {
+            width: 100%;
+            min-height: 100px;
+            padding: 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            resize: vertical;
+            margin-bottom: 1rem;
+        }
+
+        .screenshots-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+
+        .screenshot-item {
+            position: relative;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            overflow: hidden;
+            background-color: var(--background-color);
+        }
+
+        .screenshot-item img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .screenshot-item .remove-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: rgba(255, 0, 0, 0.7);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+
+        .screenshot-item .move-btn {
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 2px 6px;
+            cursor: move;
+            font-size: 12px;
+        }
+
+        .controls-container {
+            background-color: var(--background-color);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+
+        .control-group {
+            margin-bottom: 1rem;
+        }
+
+        .control-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-color);
+        }
+
+        .control-group input,
+        .control-group select {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background-color: var(--background-color);
+            color: var(--text-color);
+        }
+
+        .button-container {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .button {
+            padding: 0.5rem 1rem;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .button:hover {
+            background-color: #357abd;
+        }
+
+        .button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        .button.secondary {
+            background-color: var(--card-background);
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+        }
+
+        .button.secondary:hover {
+            background-color: var(--border-color);
+        }
+
+        .info-message {
+            background-color: var(--background-color);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 1rem;
+            margin: 1rem 0;
+            color: var(--text-color);
+        }
+
+        .info-message i {
+            color: var(--primary-color);
+            margin-right: 0.5rem;
+        }
+
+        .error-message {
+            color: #ff4444;
+            margin-top: 1rem;
+            display: none;
+            text-align: center;
+        }
+
+        .progress-container {
+            margin-top: 1rem;
+            display: none;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background-color: var(--background-color);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background-color: var(--primary-color);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .progress-text {
+            margin-top: 0.5rem;
+            font-size: 0.9rem;
+            color: var(--text-color);
+        }
+
+        .preview-container {
+            margin-top: 2rem;
+            text-align: center;
+            display: none;
+        }
+
+        .preview-container img {
+            max-width: 100%;
+            height: auto;
+            margin-bottom: 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+        }
+
+        .url-input-container {
+            margin-bottom: 1rem;
+        }
+
+        .url-input-container input {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background-color: var(--background-color);
+            color: var(--text-color);
+        }
+
+        .capture-options {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .capture-option {
+            flex: 1;
+            min-width: 200px;
+            padding: 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background-color: var(--background-color);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .capture-option:hover {
+            border-color: var(--primary-color);
+            background-color: var(--card-background);
+        }
+
+        .capture-option i {
+            font-size: 2rem;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .capture-option h3 {
+            margin: 0.5rem 0;
+            color: var(--text-color);
+        }
+
+        .capture-option p {
+            margin: 0;
+            font-size: 0.9rem;
+            color: var(--text-color);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="main-nav">
+            <div class="logo">
+                <h1>Screenshot to PDF Converter</h1>
+            </div>
+            <div class="theme-toggle">
+                <button id="themeToggle">
+                    <i class="fas fa-moon"></i>
+                </button>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <div class="ad-space top-ad">
+            <!-- Ad Space (Top) -->
+            <div class="ad-placeholder">Advertisement Space</div>
+        </div>
+
+        <div class="tool-container">
+            <div class="info-message">
+                <i class="fas fa-info-circle"></i>
+                Capture screenshots from websites or paste them directly, then combine them into a single PDF document. Perfect for creating documentation, tutorials, or saving web content.
+            </div>
+
+            <div class="capture-options">
+                <div class="capture-option" id="urlCaptureOption">
+                    <i class="fas fa-globe"></i>
+                    <h3>Capture from URL</h3>
+                    <p>Enter a website URL to capture its content</p>
+                </div>
+                <div class="capture-option" id="pasteCaptureOption">
+                    <i class="fas fa-paste"></i>
+                    <h3>Paste Screenshot</h3>
+                    <p>Paste screenshots from your clipboard</p>
+                </div>
+                <div class="capture-option" id="uploadCaptureOption">
+                    <i class="fas fa-upload"></i>
+                    <h3>Upload Images</h3>
+                    <p>Upload image files from your device</p>
+                </div>
+            </div>
+
+            <div class="url-input-container" style="display: none;">
+                <input type="url" id="urlInput" placeholder="Enter website URL (e.g., https://example.com)">
+                <div class="button-container">
+                    <button class="button" id="captureUrlButton">Capture Website</button>
+                </div>
+            </div>
+
+            <div class="screenshot-area" id="screenshotArea">
+                <div id="screenshotsGrid" class="screenshots-grid"></div>
+            </div>
+
+            <div class="controls-container">
+                <div class="control-group">
+                    <label for="pdfFormat">PDF Page Format:</label>
+                    <select id="pdfFormat">
+                        <option value="a4">A4 (210 × 297 mm)</option>
+                        <option value="letter">Letter (216 × 279 mm)</option>
+                        <option value="legal">Legal (216 × 356 mm)</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <label for="pdfOrientation">Page Orientation:</label>
+                    <select id="pdfOrientation">
+                        <option value="portrait">Portrait</option>
+                        <option value="landscape">Landscape</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <label for="imageQuality">Image Quality:</label>
+                    <input type="range" id="imageQuality" min="0.1" max="1.0" step="0.1" value="0.8">
+                    <span id="qualityValue">80%</span>
+                </div>
+            </div>
+
+            <div class="button-container">
+                <button class="button" id="generatePdfButton" disabled>Generate PDF</button>
+                <button class="button secondary" id="clearButton">Clear All</button>
+            </div>
+
+            <div class="progress-container" id="progressContainer">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <div class="progress-text" id="progressText">Processing: 0%</div>
+            </div>
+        </div>
+
+        <div class="ad-space bottom-ad">
+            <!-- Ad Space (Bottom) -->
+            <div class="ad-placeholder">Advertisement Space</div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="footer-content">
+            <p>&copy; 2024 Multi-Tools. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="../js/theme.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const { jsPDF } = window.jspdf;
+            const urlCaptureOption = document.getElementById('urlCaptureOption');
+            const pasteCaptureOption = document.getElementById('pasteCaptureOption');
+            const uploadCaptureOption = document.getElementById('uploadCaptureOption');
+            const urlInputContainer = document.querySelector('.url-input-container');
+            const urlInput = document.getElementById('urlInput');
+            const captureUrlButton = document.getElementById('captureUrlButton');
+            const screenshotsGrid = document.getElementById('screenshotsGrid');
+            const generatePdfButton = document.getElementById('generatePdfButton');
+            const clearButton = document.getElementById('clearButton');
+            const progressContainer = document.getElementById('progressContainer');
+            const progressFill = document.getElementById('progressFill');
+            const progressText = document.getElementById('progressText');
+            const pdfFormat = document.getElementById('pdfFormat');
+            const pdfOrientation = document.getElementById('pdfOrientation');
+            const imageQuality = document.getElementById('imageQuality');
+            const qualityValue = document.getElementById('qualityValue');
+
+            let screenshots = [];
+            let fileInput;
+
+            // Create hidden file input
+            fileInput = document.createElement('input');
+            fileInput.type = 'file';
+            fileInput.accept = 'image/*';
+            fileInput.multiple = true;
+            fileInput.style.display = 'none';
+            document.body.appendChild(fileInput);
+
+            // Capture option handlers
+            urlCaptureOption.addEventListener('click', () => {
+                urlInputContainer.style.display = 'block';
+                urlInput.focus();
+            });
+
+            pasteCaptureOption.addEventListener('click', () => {
+                alert('Press Ctrl+V or ⌘+V to paste a screenshot');
+            });
+
+            uploadCaptureOption.addEventListener('click', () => {
+                fileInput.click();
+            });
+
+            // URL capture handler
+            captureUrlButton.addEventListener('click', async () => {
+                const url = urlInput.value.trim();
+                if (!url) return;
+
+                try {
+                    progressContainer.style.display = 'block';
+                    progressFill.style.width = '50%';
+                    progressText.textContent = 'Capturing website...';
+
+                    // Create a proxy URL to bypass CORS
+                    const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
+
+                    // Create a temporary container
+                    const tempContainer = document.createElement('div');
+                    tempContainer.style.position = 'fixed';
+                    tempContainer.style.top = '-9999px';
+                    tempContainer.style.left = '-9999px';
+                    tempContainer.style.width = '1024px';
+                    tempContainer.style.height = '768px';
+                    document.body.appendChild(tempContainer);
+
+                    // Fetch the webpage content
+                    const response = await fetch(proxyUrl);
+                    if (!response.ok) throw new Error('Failed to load webpage');
+                    const html = await response.text();
+
+                    // Set the content
+                    tempContainer.innerHTML = html;
+
+                    // Wait for images to load
+                    const images = tempContainer.getElementsByTagName('img');
+                    await Promise.all(Array.from(images).map(img => {
+                        if (img.complete) return Promise.resolve();
+                        return new Promise((resolve, reject) => {
+                            img.onload = resolve;
+                            img.onerror = resolve; // Continue even if some images fail
+                        });
+                    }));
+
+                    // Capture the content
+                    const canvas = await html2canvas(tempContainer, {
+                        allowTaint: true,
+                        useCORS: true,
+                        logging: false,
+                        width: 1024,
+                        height: 768,
+                        windowWidth: 1024,
+                        windowHeight: 768,
+                        scale: 1
+                    });
+
+                    // Clean up
+                    document.body.removeChild(tempContainer);
+
+                    // Add the screenshot
+                    addScreenshot(canvas.toDataURL('image/png'));
+                    urlInput.value = '';
+                    progressContainer.style.display = 'none';
+
+                } catch (error) {
+                    console.error('Failed to capture website:', error);
+                    alert('Failed to capture website. This might be due to:\n1. Website blocking access\n2. Invalid URL\n3. CORS restrictions\n\nTry using the paste or upload options instead.');
+                    progressContainer.style.display = 'none';
+                }
+            });
+
+            // Enhance paste handler to support more types
+            document.addEventListener('paste', async (e) => {
+                e.preventDefault();
+                
+                // Handle image paste
+                const items = e.clipboardData.items;
+                for (let item of items) {
+                    if (item.type.indexOf('image') !== -1) {
+                        const blob = item.getAsFile();
+                        const reader = new FileReader();
+                        reader.onload = (e) => addScreenshot(e.target.result);
+                        reader.readAsDataURL(blob);
+                        return;
+                    }
+                }
+
+                // Handle text (URL) paste
+                const text = e.clipboardData.getData('text');
+                if (text && text.trim().toLowerCase().startsWith('http')) {
+                    urlInput.value = text;
+                    captureUrlButton.click();
+                }
+            });
+
+            // Enhance file upload handler
+            fileInput.addEventListener('change', (e) => {
+                const files = e.target.files;
+                if (files.length === 0) return;
+
+                progressContainer.style.display = 'block';
+                progressFill.style.width = '0%';
+                progressText.textContent = 'Processing images: 0%';
+
+                let processed = 0;
+                Array.from(files).forEach(file => {
+                    if (file.type.startsWith('image/')) {
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            addScreenshot(e.target.result);
+                            processed++;
+                            const progress = (processed / files.length) * 100;
+                            progressFill.style.width = `${progress}%`;
+                            progressText.textContent = `Processing images: ${Math.round(progress)}%`;
+                            
+                            if (processed === files.length) {
+                                progressContainer.style.display = 'none';
+                            }
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                });
+                fileInput.value = '';
+            });
+
+            function addScreenshot(dataUrl) {
+                const index = screenshots.length;
+                screenshots.push(dataUrl);
+                updateScreenshotsGrid();
+            }
+
+            function updateScreenshotsGrid() {
+                screenshotsGrid.innerHTML = '';
+                screenshots.forEach((screenshot, index) => {
+                    const item = document.createElement('div');
+                    item.className = 'screenshot-item';
+                    item.innerHTML = `
+                        <img src="${screenshot}" alt="Screenshot ${index + 1}">
+                        <button class="move-btn" draggable="true">#${index + 1}</button>
+                        <button class="remove-btn" data-index="${index}">×</button>
+                    `;
+
+                    const removeBtn = item.querySelector('.remove-btn');
+                    removeBtn.addEventListener('click', () => {
+                        screenshots.splice(index, 1);
+                        updateScreenshotsGrid();
+                    });
+
+                    const moveBtn = item.querySelector('.move-btn');
+                    moveBtn.addEventListener('dragstart', (e) => {
+                        e.dataTransfer.setData('text/plain', index);
+                    });
+
+                    item.addEventListener('dragover', (e) => e.preventDefault());
+                    item.addEventListener('drop', (e) => {
+                        e.preventDefault();
+                        const fromIndex = parseInt(e.dataTransfer.getData('text/plain'));
+                        const toIndex = index;
+                        const temp = screenshots[fromIndex];
+                        screenshots[fromIndex] = screenshots[toIndex];
+                        screenshots[toIndex] = temp;
+                        updateScreenshotsGrid();
+                    });
+
+                    screenshotsGrid.appendChild(item);
+                });
+
+                generatePdfButton.disabled = screenshots.length === 0;
+            }
+
+            // Enhance PDF generation
+            generatePdfButton.addEventListener('click', async () => {
+                if (screenshots.length === 0) return;
+
+                progressContainer.style.display = 'block';
+                progressFill.style.width = '0%';
+                progressText.textContent = 'Generating PDF: 0%';
+
+                try {
+                    const format = pdfFormat.value.toUpperCase();
+                    const orientation = pdfOrientation.value;
+                    const pdf = new jsPDF(orientation, 'pt', format);
+                    const quality = parseFloat(imageQuality.value);
+
+                    for (let i = 0; i < screenshots.length; i++) {
+                        if (i > 0) pdf.addPage();
+
+                        const img = new Image();
+                        img.src = screenshots[i];
+                        await new Promise((resolve, reject) => {
+                            img.onload = resolve;
+                            img.onerror = reject;
+                        });
+
+                        const pageWidth = orientation === 'portrait' ? pdf.internal.pageSize.getWidth() : pdf.internal.pageSize.getHeight();
+                        const pageHeight = orientation === 'portrait' ? pdf.internal.pageSize.getHeight() : pdf.internal.pageSize.getWidth();
+                        
+                        const imgRatio = img.width / img.height;
+                        const pageRatio = pageWidth / pageHeight;
+                        
+                        let finalWidth = pageWidth;
+                        let finalHeight = pageWidth / imgRatio;
+                        
+                        if (finalHeight > pageHeight) {
+                            finalHeight = pageHeight;
+                            finalWidth = pageHeight * imgRatio;
+                        }
+
+                        const x = (pageWidth - finalWidth) / 2;
+                        const y = (pageHeight - finalHeight) / 2;
+
+                        try {
+                            pdf.addImage(screenshots[i], 'PNG', x, y, finalWidth, finalHeight, undefined, 'FAST', 0);
+                        } catch (error) {
+                            console.error('Failed to add image to PDF:', error);
+                            continue;
+                        }
+
+                        progressFill.style.width = `${((i + 1) / screenshots.length) * 100}%`;
+                        progressText.textContent = `Generating PDF: ${Math.round(((i + 1) / screenshots.length) * 100)}%`;
+                    }
+
+                    pdf.save('screenshots.pdf');
+                    progressContainer.style.display = 'none';
+                } catch (error) {
+                    console.error('Failed to generate PDF:', error);
+                    alert('Failed to generate PDF. Please try again with fewer or smaller images.');
+                    progressContainer.style.display = 'none';
+                }
+            });
+
+            clearButton.addEventListener('click', () => {
+                screenshots = [];
+                updateScreenshotsGrid();
+                urlInput.value = '';
+                progressContainer.style.display = 'none';
+            });
+
+            imageQuality.addEventListener('input', () => {
+                qualityValue.textContent = `${Math.round(imageQuality.value * 100)}%`;
+            });
+        });
+    </script>
+</body>
+</html> 
